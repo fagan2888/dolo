@@ -147,7 +147,7 @@ def deterministic_solve(model, shocks=None, start_states=None, start_constraints
     if use_pandas:
         import pandas
         if 'auxiliary' in model.functions:
-            colnames = model.symbols['states'] + model.symbols['controls'] + model.symbols['auxiliary']
+            colnames = model.symbols['states'] + model.symbols['controls'] + model.symbols['auxiliaries']
             # compute auxiliaries
             y = model.functions['auxiliary'](sol[:,:n_s], sol[:,n_s:], p)
             sol = numpy.column_stack([sol,y])

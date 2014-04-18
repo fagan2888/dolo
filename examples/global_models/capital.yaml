@@ -1,4 +1,4 @@
-model_type: fg
+model_type: fga
 
 name: Capital economy
 
@@ -8,7 +8,7 @@ declarations:
 
   controls: [i]
 
-  auxiliary:  [c, r_I]
+  auxiliaries:  [c, r_I]
 
   shocks: [epsilon]
 
@@ -31,26 +31,27 @@ equations:
 ############################
 calibration:
 
-    steady_state:
 
-        # controls
-        i: ( (1/beta - (1-delta))/theta )^(1/(theta-1)) * delta
+    # controls
+    i: ( (1/beta - (1-delta))/theta )^(1/(theta-1)) * delta
 
-        # states
-        A: 1
-        k: i/delta
+    # states
+    A: 1
+    k: i/delta
 
-        #auxiliary
-        c: A*k^theta - i
-        r_I: 1/beta
+    #auxiliary
+    c: A*k^theta - i
+    r_I: 1/beta
 
-    parameters:
+    # parameters:
 
-        beta: 0.96
-        gamma: 4.0
-        delta: 0.1
-        theta: 0.3
-        rho: 0.0
+    beta: 0.96
+    gamma: 4.0
+    delta: 0.1
+    theta: 0.3
+    rho: 0.0
 
-    covariances: |
-      [[ 0.00001 ]]
+
+covariances:
+
+   [[ 0.00001 ]]

@@ -26,6 +26,8 @@ class CDR:
 
     def __call__(self,points):
 
+        points = points.T
+
         if points.ndim == 1:
             pp = atleast_2d(points).T
             res = self.__call__(pp)
@@ -44,7 +46,9 @@ class CDR:
             for i in range(n_s):
                 choice[:,i] += mdot(self.X_ss,[ds[:,i],ds[:,i]]) / 2
                 choice[:,i] += mdot(self.X_sss,[ds[:,i],ds[:,i],ds[:,i]]) / 6
-        return choice
+
+
+        return choice.T
 
     def interpolate(self,x):
         return self.__call__(x)

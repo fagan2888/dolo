@@ -326,8 +326,6 @@ class SmolyakGridRows(SmolyakBasic):
 
         self.grid = self.A( self.u_grid )
 
-        print("Father {}".format(self.grid.shape))
-
     # A goes from [0,1] to bounds
     def A(self,x):
 #        '''A is the inverse of B'''
@@ -398,7 +396,6 @@ class SmolyakGrid(SmolyakGridRows):
         super(SmolyakGrid, self).__init__( smin, smax, l, axes=None, dtype=None)
 
         self.grid = numpy.ascontiguousarray(self.grid.T)
-        print("son {}".format(self.grid.shape))
 
 
     def set_values(self, x):
