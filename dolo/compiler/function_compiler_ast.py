@@ -130,14 +130,15 @@ class ReplaceName(ast.NodeTransformer):
 
 
 def compile_function_ast(expressions, symbols, arg_names, output_names=None, funname='anonymous',
-     data_order='columns', use_numexpr=False, return_ast=False, print_code=False, definitions=None):
+     vectorize=True, data_order='columns', use_numexpr=False, return_ast=False, print_code=False, use_file=True, definitions=None):
 
     '''
     expressions: list of equations as string
     '''
 
-    vectorization_type = 'ellipsis'
-    data_order = 'columns'
+    vectorization_type = 'ellipsis'   # x[...,0]
+    if not vectorize:
+        use_numexpr=False
 
     from collections import OrderedDict
     table = OrderedDict()
@@ -158,7 +159,7 @@ def compile_function_ast(expressions, symbols, arg_names, output_names=None, fun
 
     table_symbols = { k: (std_date_symbol(*k)) for k in table.keys() }
 
-    if data_order is None:
+    if not vectorize:
         # standard assignment: i.e. k = s[0]
         index = lambda x: Index(Num(x))
     elif vectorization_type == 'ellipsis':
@@ -242,7 +243,6 @@ def compile_function_ast(expressions, symbols, arg_names, output_names=None, fun
 
     # print_code = True
     if print_code:
-
         s = "Function {}".format(mod.body[0].name)
         print("-"*len(s))
         print(s)
@@ -253,7 +253,10 @@ def compile_function_ast(expressions, symbols, arg_names, output_names=None, fun
     if return_ast:
         return mod
     else:
-        fun = eval_ast(mod)
+        if not use_file:
+            fun = eval_ast(mod)
+        else:
+            fun = eval_ast_with_file(mod)
         return fun
 
 def eval_ast(mod):
@@ -283,4 +286,42 @@ def eval_ast(mod):
     code  = compile(mod, '<string>', 'exec')
     exec(code, context, context)
     fun = context[name]
+
     return fun
+
+def eval_ast_with_file(mod):
+
+    from numexpr import evaluate
+
+    name = mod.body[0].name
+
+    code = """\
+from __future__ import division
+
+from numpy import inf, maximum, minimum
+from numpy import exp, log, sin, cos, abs
+from numexpr import evaluate
+"""
+
+    code += to_source(mod)
+    print(code)
+
+    import sys
+    # try to create a new file
+    import time
+    import tempfile
+    import os, importlib
+    from dolo.config import temp_dir
+    temp_file = tempfile.NamedTemporaryFile(mode='w+t', prefix='fun', suffix='.py', dir=temp_dir, delete=False)
+    with temp_file:
+        temp_file.write(code)
+    modname = os.path.basename(temp_file.name).strip('.py')
+
+
+    full_name = os.path.basename(temp_file.name)
+    modname, extension = os.path.splitext(full_name)
+
+    module = importlib.import_module(modname)
+
+
+    return module.__dict__[name]

@@ -26,6 +26,11 @@ warnings.formatwarning = warning_on_one_line
 import numpy
 numpy.seterr(all='ignore')
 
+# create temporary directory for compiled functions
+import tempfile, sys
+temp_dir = tempfile.mkdtemp(prefix='dolo_')
+sys.path.append(temp_dir)
+
 # try:
 #     from numpy import ndarray
 #     from dolo.compiler.model_numeric import NumericModel
