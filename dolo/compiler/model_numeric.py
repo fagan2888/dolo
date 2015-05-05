@@ -259,30 +259,30 @@ Model object:
 
             arg_names = recipe['specs'][funname]['eqs']
 
-            fun = compile_function_ast(eqs, symbols, arg_names,
-                                    output_names=target_spec, funname=funname, vectorize=False,
-                                        use_numexpr=True, definitions=defs)
-            from numba import guvectorize
-
-            args = ['n_{}'.format(i) for i in range(len(arg_names))]
-            sig = str.join(',', ['({},)'.format(e) for e in args])
-            inds = [len(symbols[e[0]]) for e in arg_names]
-            i_vec = (len(eqs))
-            print(inds)
-            print(inds.index(i_vec))
-            sig += '->({},)'.format(args[inds.index(i_vec)])
-            print(sig)
-            ssig = "void({})".format( str.join(',',['float64[:,:]']*(len(args)+1)))
-            print(ssig)
-            fun = guvectorize([ssig], sig )(fun)
-            #
-            # fun = compile_function_ast(eqs, symbols, arg_names,
-            #                         output_names=target_spec, funname=funname, vectorize=True,
-            #                             use_numexpr=True, definitions=defs)
-
+            try:
+                from numba import guvectorize
+                fun = compile_function_ast(eqs, symbols, arg_names,
+                                        output_names=target_spec, funname=funname, vectorize=False,
+                                            use_numexpr=True, definitions=defs)
+                args = ['n_{}'.format(i) for i in range(len(arg_names))]
+                sig = str.join(',', ['({})'.format(e) for e in args])
+                # inds = [len(symbols[e[0]]) for e in arg_names]
+                # i_vec = (len(eqs))
+                # print(inds)
+                # print(inds.index(i_vec))
+                # sig += '->({})'.format(args[inds.index(i_vec)])
+                # sig += '->(no)'
+                sig += ',(nout)->()'
+                # print(sig)
+                ssig = "void({})".format(str.join(',',['float64[:]']*(len(args)+1)))
+                # print(ssig)
+                fun = guvectorize([ssig], sig )(fun)
+            except Exception as e:
+                print("compilation failed: ")
+                print(e)
+                fun = compile_function_ast(eqs, symbols, arg_names, output_names=target_spec, funname=funname, vectorize=True, use_numexpr=False, definitions=defs)
 
             n_output = len(eqs)
-
             functions[funname] = standard_function(fun, n_output )
 
         self.__original_functions__ = functions
