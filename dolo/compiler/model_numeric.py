@@ -244,6 +244,8 @@ Model object:
                 functions[fb_names[1]] = standard_function(upper_bound, n_output )
 
 
+
+
             # rewrite all equations as rhs - lhs
             def filter_equal(eq):
                 if '=' in eq:
@@ -266,21 +268,23 @@ Model object:
                                             use_numexpr=True, definitions=defs)
                 args = ['n_{}'.format(i) for i in range(len(arg_names))]
                 sig = str.join(',', ['({})'.format(e) for e in args])
-                # inds = [len(symbols[e[0]]) for e in arg_names]
-                # i_vec = (len(eqs))
+                inds = [len(symbols[e[0]]) for e in arg_names]
+                i_vec = (len(eqs))
                 # print(inds)
                 # print(inds.index(i_vec))
-                # sig += '->({})'.format(args[inds.index(i_vec)])
+                sig += '->({})'.format(args[inds.index(i_vec)])
                 # sig += '->(no)'
-                sig += ',(nout)->()'
+                #sig += ',(nout)->()'
                 # print(sig)
                 ssig = "void({})".format(str.join(',',['float64[:]']*(len(args)+1)))
                 # print(ssig)
-                fun = guvectorize([ssig], sig )(fun)
+                fun = guvectorize([ssig], sig, nopython=True )(fun)
+
+
             except Exception as e:
                 print("compilation failed: ")
                 print(e)
-                fun = compile_function_ast(eqs, symbols, arg_names, output_names=target_spec, funname=funname, vectorize=True, use_numexpr=False, definitions=defs)
+                fun = compile_function_ast(eqs, symbols, arg_names, output_names=target_spec, funname=funname, vectorize=True, use_numexpr=True, definitions=defs)
 
             n_output = len(eqs)
             functions[funname] = standard_function(fun, n_output )

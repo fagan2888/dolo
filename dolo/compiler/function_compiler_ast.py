@@ -183,12 +183,12 @@ def compile_function_ast(expressions, symbols, arg_names, output_names=None, fun
         line = Assign(targets=[Name(id=std_name, ctx=Store())], value=val)
         preamble.append(line)
 
-    if use_numexpr:
-        for i in range(len(expressions)):
-        # k : var, date
-            val = Subscript(value=Name(id='out', ctx=Load()), slice=index(i), ctx=Load())
-            line = Assign(targets=[Name(id='out_{}'.format(i), ctx=Store())], value=val)
-            preamble.append(line)
+    # if use_numexpr:
+    #     for i in range(len(expressions)):
+    #     # k : var, date
+    #         val = Subscript(value=Name(id='out', ctx=Load()), slice=index(i), ctx=Load())
+    #         line = Assign(targets=[Name(id='out_{}'.format(i), ctx=Store())], value=val)
+    #         # preamble.append(line)
 
     body = []
     std_dates = StandardizeDates(symbols, aa)
@@ -204,29 +204,38 @@ def compile_function_ast(expressions, symbols, arg_names, output_names=None, fun
 
         rexpr = std_dates.visit(expr)
 
+        name = '{}_'.format(symbols[output_names[0]][i]) if output_names is not None else 'out_{}'.format(i)
+
         if not use_numexpr:
             rhs = rexpr
+            val = Subscript(value=Name(id='out', ctx=Load()), slice=index(i), ctx=Store())
+            line = Assign(targets=[Name(id=name, ctx=Store())], value=rhs )
+            body.append(line)
+            line = Assign(targets=[val], value=Name(id=name, ctx=Store()) )
+            body.append(line)
+
         else:
             src = to_source(rexpr)
+            val = Subscript(value=Name(id='out', ctx=Load()), slice=index(i), ctx=Load())
+            line = Assign(targets=[Name(id=name, ctx=Store())], value=val)
+            preamble.append(line)
             rhs = Call( func=Name(id='evaluate', ctx=Load()),
-                args=[Str(s=src)], keywords=[keyword(arg='out', value=Name(id='out_{}'.format(i), ctx=Load()))], starargs=None, kwargs=None)
+                args=[Str(s=src)], keywords=[keyword(arg='out', value=Name(id=name, ctx=Load()))], starargs=None, kwargs=None)
+            line = Expr(value=rhs)
+            body.append(line)
 
 
-        if not use_numexpr:
-            val = Subscript(value=Name(id='out', ctx=Load()), slice=index(i), ctx=Store())
-            line = Assign(targets=[val], value=rhs )
-        else:
-            line = Expr(value=rhs) #Assign(targets=[Name(id='out_{}'.format(i), ctx=Load())], value=rhs )
+        # val = Subscript(value=Name(id='out', ctx=Load()), slice=index(i), ctx=Load())
+        # line = Assign(targets=[Name(id='out_{}'.format(i), ctx=Store())], value=val)
+        # preamble.append(line)
 
-        body.append(line)
-
-        if output_names is not None:
-            varname = symbols[output_names[0]][i]
-            date = output_names[1]
-            out_name = table_symbols[(varname,date)]
-            line = Assign(targets=[Name(id=out_name.format(i), ctx=Store())],
-                          value=Name(id='out_{}'.format(i), ctx=Store()))
-            # body.append(line)
+        # if output_names is not None:
+        #     varname = symbols[output_names[0]][i]
+        #     date = output_names[1]
+        #     out_name = table_symbols[(varname,date)]
+        #     line = Assign(targets=[Name(id=out_name.format(i), ctx=Store())],
+        #                   value=Name(id='out_{}'.format(i), ctx=Store()))
+        #     body.append(line)
 
 
     args = [e[2] for e in arg_names] + ['out']
