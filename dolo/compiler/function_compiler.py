@@ -40,16 +40,10 @@ class standard_function:
         assert(len(set(sizes))==1)
         N = sizes[0]
 
-        # if 'out' in kwargs:
-        #     out = kwargs['out']
-        # else:
-
         out = numpy.zeros((N,self.n_output))
 
         fun( *args , out=out )
 
-        # if ('out' not in kwargs):
-        #     return out
 
         if not 'diff' in kwargs:
 

@@ -225,23 +225,8 @@ def compile_function_ast(expressions, symbols, arg_names, output_names=None, fun
             body.append(line)
 
 
-        # val = Subscript(value=Name(id='out', ctx=Load()), slice=index(i), ctx=Load())
-        # line = Assign(targets=[Name(id='out_{}'.format(i), ctx=Store())], value=val)
-        # preamble.append(line)
-
-        # if output_names is not None:
-        #     varname = symbols[output_names[0]][i]
-        #     date = output_names[1]
-        #     out_name = table_symbols[(varname,date)]
-        #     line = Assign(targets=[Name(id=out_name.format(i), ctx=Store())],
-        #                   value=Name(id='out_{}'.format(i), ctx=Store()))
-        #     body.append(line)
-
 
     args = [e[2] for e in arg_names] + ['out']
-
-    # f = FunctionDef(name=funname, args=arguments(args=[Name(id=a, ctx=Param()) for a in args], vararg=None, kwarg=None, defaults=[]),
-    #             body=preamble+body, decorator_list=[])
 
     f = FunctionDef(name=funname, args=arguments(args=[Name(id=a, ctx=Param()) for a in args], vararg=None, kwarg=None, kwonlyargs=[], kw_defaults=[], defaults=[]),
             body=preamble+body, decorator_list=[])
@@ -250,7 +235,6 @@ def compile_function_ast(expressions, symbols, arg_names, output_names=None, fun
     mod = Module(body=[f])
     mod = ast.fix_missing_locations(mod)
 
-    # print_code = True
     if print_code:
         s = "Function {}".format(mod.body[0].name)
         print("-"*len(s))
@@ -313,7 +297,6 @@ from numexpr import evaluate
 """
 
     code += to_source(mod)
-    print(code)
 
     import sys
     # try to create a new file

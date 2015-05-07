@@ -179,6 +179,7 @@ Model object:
         comps = []
 
         functions = {}
+        functions_simple = {}
 
         for funname in recipe['specs'].keys():
 
@@ -244,8 +245,6 @@ Model object:
                 functions[fb_names[1]] = standard_function(upper_bound, n_output )
 
 
-
-
             # rewrite all equations as rhs - lhs
             def filter_equal(eq):
                 if '=' in eq:
@@ -261,35 +260,34 @@ Model object:
 
             arg_names = recipe['specs'][funname]['eqs']
 
+            # pure non-vectorized version
+            fun_simple = compile_function_ast(eqs, symbols, arg_names,
+                                    output_names=target_spec, funname=funname, vectorize=False,
+                                        use_numexpr=True, definitions=defs)
+
+            # build vectorized version
+            # TODO: option to choose numexpr instead of guvectorize
+            # TODO: guvectorize for arbitrary output dimension (see numba progress)
             try:
                 from numba import guvectorize
-                fun = compile_function_ast(eqs, symbols, arg_names,
-                                        output_names=target_spec, funname=funname, vectorize=False,
-                                            use_numexpr=True, definitions=defs)
                 args = ['n_{}'.format(i) for i in range(len(arg_names))]
                 sig = str.join(',', ['({})'.format(e) for e in args])
                 inds = [len(symbols[e[0]]) for e in arg_names]
                 i_vec = (len(eqs))
-                # print(inds)
-                # print(inds.index(i_vec))
                 sig += '->({})'.format(args[inds.index(i_vec)])
-                # sig += '->(no)'
                 #sig += ',(nout)->()'
-                # print(sig)
                 ssig = "void({})".format(str.join(',',['float64[:]']*(len(args)+1)))
-                # print(ssig)
-                fun = guvectorize([ssig], sig, nopython=True )(fun)
-
-
+                fun = guvectorize([ssig], sig, nopython=True )(fun_simple)
             except Exception as e:
-                print("compilation failed: ")
-                print(e)
+                # issue a warning ?
                 fun = compile_function_ast(eqs, symbols, arg_names, output_names=target_spec, funname=funname, vectorize=True, use_numexpr=True, definitions=defs)
 
             n_output = len(eqs)
             functions[funname] = standard_function(fun, n_output )
+            functions_simple[funname] = fun_simple
 
         self.__original_functions__ = functions
+        self.__source_functions__ = functions_simple
 
         if self.model_type == 'dtcscc':
             from dolo.algos.dtcscc.convert import convert_all
