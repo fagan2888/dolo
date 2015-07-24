@@ -269,6 +269,7 @@ Model object:
             # TODO: option to choose numexpr instead of guvectorize
             # TODO: guvectorize for arbitrary output dimension (see numba progress)
             try:
+                no_never()
                 from numba import guvectorize
                 args = ['n_{}'.format(i) for i in range(len(arg_names))]
                 sig = str.join(',', ['({})'.format(e) for e in args])

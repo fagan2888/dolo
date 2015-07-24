@@ -298,6 +298,8 @@ from numexpr import evaluate
 
     code += to_source(mod)
 
+    print(code)
+
     import sys
     # try to create a new file
     import time
