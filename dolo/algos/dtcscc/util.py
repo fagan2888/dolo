@@ -74,14 +74,12 @@ def _get_interp(bounds, interp_orders, interp_type, smolyak_order):
         interp_orders = [5] * bounds.shape[1]
 
     if interp_type == 'smolyak':
-        dr = SmolyakGrid(bounds[0, :], bounds[1, :], smolyak_order)
+        return SmolyakGrid(bounds[0, :], bounds[1, :], smolyak_order)
     elif interp_type == 'spline':
-        dr = MultivariateSplines(bounds[0, :], bounds[1, :], interp_orders)
-    elif interp_type == 'multilinear':
-        raise ValueError("TODO: multilinear is missing??")
-        dr = MultilinearInterpolator(bounds[0, :], bounds[1, :], interp_orders)
-
-    return dr
+        return MultivariateSplines(bounds[0, :], bounds[1, :], interp_orders)
+    else:
+        msg = "Unknown `interp_type` {}. Possible values are smolyak or spline"
+        raise ValueError(msg.format(interp_type))
 
 
 def _get_integration(model, integration, integration_orders):
